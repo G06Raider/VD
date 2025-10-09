@@ -76,9 +76,7 @@ local function onScreenResized()
         mainContainer.Size = UDim2.new(0.4, 0, 0.6, 0)
     end
     
-    -- Recreate stars with new positions
-    starsContainer:ClearAllChildren()
-    -- (Re-run your star creation code here)
+
 end
 
 -- Connect resize event
