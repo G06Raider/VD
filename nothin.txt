@@ -63,25 +63,7 @@ end
 mainContainer.Size = getResponsiveSize()
 
 
--- Handle screen resizing
-local function onScreenResized()
-    local screenSize = workspace.CurrentCamera.ViewportSize
-    
-    -- Adjust main container size based on screen
-    if screenSize.X < 1000 then -- Mobile/tablet
-        mainContainer.Size = UDim2.new(0.9, 0, 0.8, 0)
-    elseif screenSize.X < 1500 then -- Laptop
-        mainContainer.Size = UDim2.new(0.6, 0, 0.7, 0)
-    else -- Desktop
-        mainContainer.Size = UDim2.new(0.4, 0, 0.6, 0)
-    end
-    
 
-end
-
--- Connect resize event
-workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(onScreenResized)
-onScreenResized() -- Initial call
 
 
 -- Make grid responsive based on container size
