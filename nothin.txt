@@ -2565,67 +2565,100 @@ end)
 
 local isMinimized = false
 
+-- UPDATED: Use the same responsive calculation function
 local function calculateSizes()
     local screenSize = workspace.CurrentCamera.ViewportSize
     
-    local originalWidth = screenSize.X * 0.2
-    local originalHeight = screenSize.Y * 0.4
-    
-    local minimizedWidth = screenSize.X * 0.1
-    local minimizedHeight = 40
-    
-    return {
-        original = UDim2.new(0, originalWidth, 0, originalHeight),
-        minimized = UDim2.new(0, minimizedWidth, 0, minimizedHeight)
-    }
+    -- Use the same logic as makeUIResponsive
+    if screenSize.X < 768 then -- Mobile
+        return {
+            original = UDim2.new(0.95, 0, 0.85, 0),
+            minimized = UDim2.new(0.2, 0, 0, 40) -- Smaller minimized size for mobile
+        }
+    elseif screenSize.X < 1366 then -- Laptop
+        return {
+            original = UDim2.new(0.7, 0, 0.75, 0),
+            minimized = UDim2.new(0.15, 0, 0, 40)
+        }
+    else -- Desktop
+        return {
+            original = UDim2.new(0.4, 0, 0.6, 0),
+            minimized = UDim2.new(0.1, 0, 0, 40)
+        }
+    end
 end
 
-local sizes = calculateSizes()
-local originalSize = sizes.original
-local minimizedSize = sizes.minimized
+-- UPDATED: Store current responsive sizes
+local currentSizes = calculateSizes()
 
 print("Screen size:", workspace.CurrentCamera.ViewportSize)
-print("Original size (pixels):", originalSize)
-print("Minimized size (pixels):", minimizedSize)
+print("Original size:", currentSizes.original)
+print("Minimized size:", currentSizes.minimized)
 
 minimizeButton.MouseButton1Click:Connect(function()
     print("🎯 MINIMIZE BUTTON CLICKED! isMinimized:", isMinimized)
     
+    -- UPDATED: Always recalculate sizes before minimizing/expanding
+    currentSizes = calculateSizes()
+    
     if isMinimized then
         print("📈 EXPANDING WINDOW...")
-        local sizes = calculateSizes()
         local expandTween = TweenService:Create(mainContainer, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = sizes.original
+            Size = currentSizes.original
         })
         expandTween:Play()
+        
+        -- Show all content
         sidebar.Visible = true
+        for pageName, page in pairs(PageManager.Pages) do
+            if page.Active then
+                page.Content.Visible = true
+            end
+        end
+        
         isMinimized = false
-        print("✅ Window expanded to:", sizes.original)
+        print("✅ Window expanded to:", currentSizes.original)
     else
         print("📉 MINIMIZING WINDOW...")
-        local sizes = calculateSizes()
         local minimizeTween = TweenService:Create(mainContainer, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = sizes.minimized
+            Size = currentSizes.minimized
         })
         minimizeTween:Play()
+        
+        -- Hide all content except header
         sidebar.Visible = false
+        for pageName, page in pairs(PageManager.Pages) do
+            page.Content.Visible = false
+        end
+        
         isMinimized = true
-        print("✅ Window minimized to:", sizes.minimized)
+        print("✅ Window minimized to:", currentSizes.minimized)
     end
 end)
 
+-- UPDATED: Handle screen resizing properly
 workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
     print("Screen resized, recalculating sizes...")
-    local newSizes = calculateSizes()
+    
+    -- Always recalculate sizes
+    currentSizes = calculateSizes()
     
     if not isMinimized then
-        mainContainer.Size = newSizes.original
-        originalSize = newSizes.original
+        -- If expanded, use the new original size
+        mainContainer.Size = currentSizes.original
+        print("🔄 Updated expanded size to:", currentSizes.original)
     else
-        mainContainer.Size = newSizes.minimized
-        minimizedSize = newSizes.minimized
+        -- If minimized, use the new minimized size
+        mainContainer.Size = currentSizes.minimized
+        print("🔄 Updated minimized size to:", currentSizes.minimized)
+    end
+    
+    -- UPDATED: Also update the grid layout when screen resizes
+    if powersGrid and uiGridLayout then
+        updateGridLayout()
     end
 end)
+
 closeButton.MouseButton1Click:Connect(function()
     print("❌ CLOSE BUTTON CLICKED! Destroying GUI...")
     local closeTween = TweenService:Create(mainContainer, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
